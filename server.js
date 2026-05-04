@@ -1,22 +1,22 @@
 const express = require('express');
 const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// 🔑 Browser-like headers
+// ✅ ENABLE CORS
+app.use(cors());
+
 const config = {
     headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://results.eci.gov.in/",
-        "Connection": "keep-alive"
-    },
-    timeout: 20000
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "text/html",
+        "Referer": "https://results.eci.gov.in/"
+    }
 };
 
-// PARTY API
+// PARTY
 app.get('/party', async (req, res) => {
     try {
         const response = await axios.get(
@@ -27,12 +27,12 @@ app.get('/party', async (req, res) => {
         res.send(response.data);
 
     } catch (err) {
-        console.error("Party fetch error:", err.message);
+        console.error(err.message);
         res.status(500).send("Error fetching party data");
     }
 });
 
-// CANDIDATE API
+// CANDIDATES
 app.get('/candidates', async (req, res) => {
     try {
         const response = await axios.get(
@@ -43,16 +43,11 @@ app.get('/candidates', async (req, res) => {
         res.send(response.data);
 
     } catch (err) {
-        console.error("Candidate fetch error:", err.message);
+        console.error(err.message);
         res.status(500).send("Error fetching candidate data");
     }
 });
 
-// ROOT
-app.get('/', (req, res) => {
-    res.send("Server running OK");
-});
-
 app.listen(PORT, () => {
-    console.log(`Server running on ${PORT}`);
+    console.log("Server running on port " + PORT);
 });
