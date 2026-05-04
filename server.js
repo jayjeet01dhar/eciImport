@@ -1,53 +1,69 @@
 const express = require('express');
-const axios = require('axios');
+const puppeteer = require('puppeteer');
 const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ✅ ENABLE CORS
 app.use(cors());
 
-const config = {
-    headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html",
-        "Referer": "https://results.eci.gov.in/"
-    }
-};
-
-// PARTY
-app.get('/party', async (req, res) => {
-    try {
-        const response = await axios.get(
-            "https://results.eci.gov.in/ResultAcGenMay2026/partywiseresult-S25.htm",
-            config
-        );
-
-        res.send(response.data);
-
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Error fetching party data");
-    }
+// Health check
+app.get('/', (req, res) => {
+  res.send("Server is running");
 });
 
-// CANDIDATES
+// PARTY DATA
+app.get('/party', async (req, res) => {
+  try {
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+
+    await page.goto(
+      'https://results.eci.gov.in/ResultAcGenMay2026/partywiseresult-S25.htm',
+      { waitUntil: 'networkidle2', timeout: 60000 }
+    );
+
+    const html = await page.content();
+
+    await browser.close();
+
+    res.send(html);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching party data");
+  }
+});
+
+// CANDIDATE DATA
 app.get('/candidates', async (req, res) => {
-    try {
-        const response = await axios.get(
-            "https://results.eci.gov.in/ResultAcGenMay2026/index.htm",
-            config
-        );
+  try {
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
 
-        res.send(response.data);
+    const page = await browser.newPage();
 
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send("Error fetching candidate data");
-    }
+    await page.goto(
+      'https://results.eci.gov.in/ResultAcGenMay2026/index.htm',
+      { waitUntil: 'networkidle2', timeout: 60000 }
+    );
+
+    const html = await page.content();
+
+    await browser.close();
+
+    res.send(html);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching candidates");
+  }
 });
 
 app.listen(PORT, () => {
-    console.log("Server running on port " + PORT);
+  console.log(`Server running on port ${PORT}`);
 });
