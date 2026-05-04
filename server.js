@@ -1,31 +1,30 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// 🔑 VERY IMPORTANT HEADERS (this is the fix)
-const headers = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "text/html",
-    "Referer": "https://results.eci.gov.in/"
+// 🔑 Browser-like headers
+const config = {
+    headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://results.eci.gov.in/",
+        "Connection": "keep-alive"
+    },
+    timeout: 20000
 };
 
-// PARTY DATA
+// PARTY API
 app.get('/party', async (req, res) => {
     try {
-        const response = await fetch(
+        const response = await axios.get(
             "https://results.eci.gov.in/ResultAcGenMay2026/partywiseresult-S25.htm",
-            { headers }
+            config
         );
 
-        const html = await response.text();
-
-        if (!html || html.length < 1000) {
-            throw new Error("Empty or blocked response");
-        }
-
-        res.send(html);
+        res.send(response.data);
 
     } catch (err) {
         console.error("Party fetch error:", err.message);
@@ -33,17 +32,15 @@ app.get('/party', async (req, res) => {
     }
 });
 
-// CANDIDATE DATA
+// CANDIDATE API
 app.get('/candidates', async (req, res) => {
     try {
-        const response = await fetch(
+        const response = await axios.get(
             "https://results.eci.gov.in/ResultAcGenMay2026/index.htm",
-            { headers }
+            config
         );
 
-        const html = await response.text();
-
-        res.send(html);
+        res.send(response.data);
 
     } catch (err) {
         console.error("Candidate fetch error:", err.message);
@@ -53,7 +50,7 @@ app.get('/candidates', async (req, res) => {
 
 // ROOT
 app.get('/', (req, res) => {
-    res.send("Server running");
+    res.send("Server running OK");
 });
 
 app.listen(PORT, () => {
